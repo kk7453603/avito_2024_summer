@@ -1,0 +1,228 @@
+basePath: /
+definitions:
+  models.AuthRequest:
+    properties:
+      password:
+        description: Пароль для аутентификации.
+        type: string
+      username:
+        description: Имя пользователя для аутентификации.
+        type: string
+    type: object
+  models.AuthResponse:
+    properties:
+      token:
+        description: JWT-токен для доступа к защищённым ресурсам.
+        type: string
+    type: object
+  models.CoinHistory:
+    properties:
+      received:
+        description: Транзакции по полученным монетам.
+        items:
+          $ref: '#/definitions/models.ReceivedTransaction'
+        type: array
+      sent:
+        description: Транзакции по отправленным монетам.
+        items:
+          $ref: '#/definitions/models.SentTransaction'
+        type: array
+    type: object
+  models.ErrorResponse:
+    properties:
+      errors:
+        description: Сообщение об ошибке.
+        type: string
+    type: object
+  models.InfoResponse:
+    properties:
+      coinHistory:
+        allOf:
+        - $ref: '#/definitions/models.CoinHistory'
+        description: История транзакций по монетам.
+      coins:
+        description: Количество доступных монет.
+        type: integer
+      inventory:
+        description: Список купленных товаров.
+        items:
+          $ref: '#/definitions/models.Item'
+        type: array
+    type: object
+  models.Item:
+    properties:
+      quantity:
+        description: Количество предметов.
+        type: integer
+      type:
+        description: Тип предмета.
+        type: string
+    type: object
+  models.ReceivedTransaction:
+    properties:
+      amount:
+        description: Количество полученных монет.
+        type: integer
+      fromUser:
+        description: Имя пользователя, отправившего монеты.
+        type: string
+    type: object
+  models.SendCoinRequest:
+    properties:
+      amount:
+        description: Количество монет для перевода.
+        type: integer
+      toUser:
+        description: Имя пользователя, которому нужно отправить монеты.
+        type: string
+    type: object
+  models.SentTransaction:
+    properties:
+      amount:
+        description: Количество отправленных монет.
+        type: integer
+      toUser:
+        description: Имя пользователя, которому отправлены монеты.
+        type: string
+    type: object
+host: 0.0.0.0
+info:
+  contact:
+    email: kk7453603@gmail.com
+    name: '@lettons'
+    url: https://t.me/lettons
+  description: This is a merch store server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Merch Store API
+  version: "1.0"
+paths:
+  /api/auth:
+    post:
+      consumes:
+      - application/json
+      description: Аутентифицирует пользователя и возвращает JWT-токен. При первой
+        аутентификации пользователь создается автоматически.
+      parameters:
+      - description: Данные для аутентификации
+        in: body
+        name: authRequest
+        required: true
+        schema:
+          $ref: '#/definitions/models.AuthRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      summary: Аутентификация и получение JWT-токена
+  /api/buy/{item}:
+    get:
+      description: Покупает мерч для авторизованного пользователя. Имя товара передается
+        в параметре пути.
+      parameters:
+      - description: Наименование мерча
+        in: path
+        name: item
+        required: true
+        type: string
+      - description: Количество мерча
+        in: query
+        name: count
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Покупка выполнена успешно
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Купить мерч за монетки
+  /api/info:
+    get:
+      description: Возвращает баланс монет, список купленных товаров и историю переводов
+        (полученные и отправленные).
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.InfoResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Получение информации о монетах, инвентаре и истории транзакций
+  /api/sendCoin:
+    post:
+      consumes:
+      - application/json
+      description: Переводит указанное количество монет от авторизованного пользователя
+        к другому.
+      parameters:
+      - description: Данные для перевода монет
+        in: body
+        name: sendCoinRequest
+        required: true
+        schema:
+          $ref: '#/definitions/models.SendCoinRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Перевод выполнен успешно
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Отправить монеты другому пользователю
+swagger: "2.0"
