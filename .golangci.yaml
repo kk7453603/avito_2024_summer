@@ -1,9 +1,0 @@
-linters:
-  enable:
-    - govet
-    - errcheck
-    - staticcheck
-    - gosimple
-    - unused
-run:
-  timeout: 2m

@@ -1,44 +1,58 @@
-version: '3.8'
-
 services:
   postgres:
-    image: postgres:16
-    container_name: postgres
-    environment:
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    env_file:
-      - .env
-    ports:
-      - "${DB_PORT}:5432"
-      - 5433:5433
+    image: postgres:16-alpine
+    container_name: mss-psql
+    restart: on-failure
+    networks:
+      - mss-network
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    networks:
-      - backend
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  my-go-app:
-    build: .
-    restart: always
+    #      - ./migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "${Docker_Port}:${Docker_Port}"
-    env_file:
-      - .env
+      - "${DB_PORT}:${DB_PORT}"
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    healthcheck:
+      test: [ "CMD-SHELL", "sh -c 'pg_isready -U ${DB_USER} -d ${DB_NAME}'" ]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  migrate:
+    image: migrate/migrate
+    container_name: mss-migrate
+    restart: no
     networks:
-      - backend
+      - mss-network
+    volumes:
+      - ./migrations:/migrations
     depends_on:
       postgres:
         condition: service_healthy
+    command: "-path /migrations -database postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}?sslmode=disable up"
+
+  app:
+    build: ./
+    container_name: mss-app
+    networks:
+      - mss-network
+    ports:
+      - "${HTTP_PORT}:${HTTP_PORT}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: mss-psql
+      HTTP_HOST: "0.0.0.0"
+    env_file:
+      - .env
 
 volumes:
   postgres_data:
 
 networks:
-  backend:
+  mss-network:
     driver: bridge

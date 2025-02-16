@@ -2,44 +2,42 @@ package models
 
 import "time"
 
-// User представляет запись из таблицы users.
 type User struct {
-	ID          int       `json:"id"`       // Идентификатор пользователя (SERIAL).
-	Username    string    `json:"username"` // Уникальное имя пользователя.
-	Password    string    `json:"password"`
-	CoinBalance int       `json:"coin_balance"` // Баланс монет (неотрицательный).
-	CreatedAt   time.Time `json:"created_at"`   // Дата и время создания записи.
+	ID        int       `json:"id" db:"id" binding:"required"`
+	Username  string    `json:"username" db:"username" binding:"required"`
+	Password  string    `json:"password" db:"password" binding:"required"`
+	Coins     int       `json:"coins" db:"coins" binding:"required"`
+	CreatedAt time.Time `json:"created_at" db:"created_at" binding:"required"`
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at" binding:"required"`
 }
 
-// MerchItem представляет запись из таблицы merch_items (справочник мерча).
-type MerchItem struct {
-	Name  string `json:"name"`  // Название товара (PRIMARY KEY).
-	Price int    `json:"price"` // Цена товара.
+type Login struct {
+	Username string `json:"username" binding:"required,min=8,alphanum"`
+	Password string `json:"password" binding:"required,min=8"`
 }
 
-// InventoryItem представляет запись из таблицы inventory – купленные товары пользователя.
-type InventoryItem struct {
-	ID        int    `json:"id"`         // Идентификатор записи инвентаря.
-	UserID    int    `json:"user_id"`    // Внешний ключ к пользователю.
-	MerchName string `json:"merch_name"` // Название товара (из merch_items).
-	Quantity  int    `json:"quantity"`   // Количество купленного товара.
+type Merch struct {
+	Type     string `json:"type" db:"item_slug"`
+	Quantity int    `json:"quantity" db:"quantity"`
 }
 
-// CoinTransfer представляет запись из таблицы coin_transfers – перевод монет между пользователями.
-type CoinTransfer struct {
-	ID         int       `json:"id"`           // Идентификатор перевода.
-	FromUserID int       `json:"from_user_id"` // Идентификатор пользователя-отправителя.
-	ToUserID   int       `json:"to_user_id"`   // Идентификатор пользователя-получателя.
-	Amount     int       `json:"amount"`       // Количество переведённых монет.
-	CreatedAt  time.Time `json:"created_at"`   // Дата и время перевода.
+type Receiving struct {
+	User   string `json:"fromUser" db:"username"`
+	Amount int    `json:"amount" db:"coins"`
 }
 
-// MerchPurchase представляет запись из таблицы merch_purchases – покупка мерча пользователем.
-type MerchPurchase struct {
-	ID         int       `json:"id"`          // Идентификатор покупки.
-	UserID     int       `json:"user_id"`     // Внешний ключ к пользователю.
-	MerchName  string    `json:"merch_name"`  // Название товара (из merch_items).
-	Quantity   int       `json:"quantity"`    // Количество купленного товара.
-	TotalPrice int       `json:"total_price"` // Итоговая стоимость покупки (price * quantity).
-	CreatedAt  time.Time `json:"created_at"`  // Дата и время покупки.
+type Sending struct {
+	User   string `json:"toUser" db:"username" binding:"required,min=8,alphanum"`
+	Amount int    `json:"amount" db:"coins" binding:"required,gte=1"`
+}
+
+type CoinHistory struct {
+	Receiving *[]Receiving `json:"received"`
+	Sending   *[]Sending   `json:"sent"`
+}
+
+type Item struct {
+	Slug  string `json:"slug" db:"slug"`
+	Title string `json:"title" db:"title"`
+	Price int    `json:"price" db:"price"`
 }

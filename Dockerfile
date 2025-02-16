@@ -1,12 +1,21 @@
-FROM golang:1.22.4
+FROM golang:1.24-alpine AS builder
+WORKDIR /usr/local/src
+RUN apk --no-cache add bash gcc musl-dev
 
-WORKDIR /app
+# Dependencies
+COPY ["go.mod", "go.sum", "./"]
+RUN go mod download
 
-COPY . /app
+# Build
+COPY . .
+RUN go build -o ./bin/app ./cmd/merchshop/main.go
 
-RUN go build -o ./bin/main ./cmd/main.go
 
-EXPOSE ${Docker_Port}
+FROM alpine AS runner
+WORKDIR /usr/local/src
 
-CMD ["/app/bin/main"]
+# Dependencies
+COPY ./.env ./.env
+COPY --from=builder /usr/local/src/bin/app .
 
+CMD ["./app"]
