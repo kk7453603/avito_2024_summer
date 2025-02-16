@@ -67,19 +67,37 @@ docker-compose down
 - Аутентификация:
   - Метод: POST
   - Эндпоинт: /api/auth
-  - Тело запроса: {"username": <string>, "password": <string>}
+  - Тело запроса: {"username": ```<string>```, "password": ```<string>```}
 
 - Информация:
   - Метод: GET
   - Эндпоинт: /api/info
   - Тело запроса: отсутствует
+  - Загловок: ```Authorization: Bearer <Token>```
 
 - Передача монет:
   - Метод: POST
   - Эндпоинт: /api/sendCoin
-  - Тело запроса: {"toUser": <string>, "amount": <integer>}
+  - Тело запроса: {"toUser": ```<string>```, "amount": ```<integer>```}
+  - Загловок: ```Authorization: Bearer <Token>```
 
 - Покупка товара:
   - Метод: GET
   - Эндпоинт: /api/buy/:item
   - Тело запроса: отсутствует
+  - Загловок: ```Authorization: Bearer <Token>```
+
+
+---
+---
+- Пример эндпоинта, при запуске контейнера в docker:
+  - localhost:8080/api/info
+---
+---
+### POSTMAN
+
+Для импорта запросов воспользуйтесь JSON-файлом с описанием API, доступным по ссылке: ```https://github.com/avito-tech/tech-internship/blob/main/Tech%20Internships/Backend/Backend-trainee-assignment-winter-2025/schema.json```
+
+
+### Схема базы данных
+![DB](images/image.png)
